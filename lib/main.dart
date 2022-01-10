@@ -32,15 +32,21 @@ class _MyHomePageState extends State<MyHomePage> {
   static const platform = MethodChannel('flutter/MethodChannelDemo');
   String encriptText = '';
   String decriptText = '';
+  String publicKeyText = '';
+  List keyAlias = [];
 
   Future<void> encrypt() async {
     try {
       final String enc =
           await platform.invokeMethod('encript', {"text": "saddam"});
       final String dec = await platform.invokeMethod('decript', {"text": enc});
+      final String getPublicKey =
+          await platform.invokeMethod('getPublicKey', {"base64Encode": true});
+
       setState(() {
         encriptText = enc;
         decriptText = dec;
+        publicKeyText = getPublicKey;
       });
     } on PlatformException catch (e) {
       setState(() {
@@ -51,24 +57,48 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void initState() {
+    Future.microtask(() async {
+      keyAlias = await platform.invokeMethod('listKeyAlias');
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('Plain Text\n saddam'),
-            Text(
-              'Encript Text: $encriptText',
-            ),
-            Text(
-              'Decript Text: $decriptText',
-            ),
-          ],
-        ),
+      body: ListView(
+        children: <Widget>[
+          const Text('Plain Text\nsaddam'),
+          const Divider(
+            thickness: 1,
+          ),
+          Text(
+            '\nEncript Text:\n$encriptText',
+          ),
+          const Divider(
+            thickness: 1,
+          ),
+          Text(
+            '\nDecript Text:\n$decriptText',
+          ),
+          const Divider(
+            thickness: 1,
+          ),
+          Text(
+            '\nList KeyAlias:\n$keyAlias',
+          ),
+          const Divider(
+            thickness: 1,
+          ),
+          Text(
+            '\nPublicKey:\n$publicKeyText',
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: encrypt,

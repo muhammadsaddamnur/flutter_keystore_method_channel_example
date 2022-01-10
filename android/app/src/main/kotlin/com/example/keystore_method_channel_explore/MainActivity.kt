@@ -34,6 +34,13 @@ class MainActivity: FlutterActivity() {
                 val text : String? = call.argument("text")
                 val resultData : String? = keystoreService.decryptData(text)
                 result.success(resultData)
+            } else if(call.method == "listKeyAlias"){ 
+                val resultData: MutableList<String> = keystoreService.listKeyAlias()
+                result.success(resultData)
+            } else if(call.method == "getPublicKey"){
+                val base64Encode : Boolean? = call.argument("base64Encode")
+                val resultData : String? = keystoreService.getPublicKey(base64Encode)
+                result.success(resultData)
             } else {
                 result.notImplemented()
             }
@@ -44,8 +51,7 @@ class MainActivity: FlutterActivity() {
 }
 
 class KeyStoreService(private val context: Context, private val keyStoreAlias: String) {
-        private val keyStore: KeyStore
-
+    private val keyStore: KeyStore
     private val KEYSTORE_PROVIDER = "AndroidKeyStore"
     private val RSA_CIPHER = "RSA/ECB/PKCS1Padding"
 
@@ -130,5 +136,27 @@ class KeyStoreService(private val context: Context, private val keyStoreAlias: S
         val result = cipher.doFinal(Base64.decode(encryptedStr!!, Base64.DEFAULT))
 
         return String(result)
+    }
+
+    fun getPublicKey(base64Encode: Boolean?): String{
+        val encodedPublicKey: ByteArray = keyStore.getCertificate(keyStoreAlias).publicKey.encoded
+        val b64PublicKey: String = Base64.encodeToString(encodedPublicKey, Base64.DEFAULT)
+
+        return if(base64Encode == true) b64PublicKey else encodedPublicKey.toString()
+    }
+
+    fun listKeyAlias(): MutableList<String> {
+        val keyAliases: MutableList<String> = ArrayList()
+        try {
+            val aliases = keyStore.aliases()
+            while (aliases.hasMoreElements()) {
+                keyAliases.add(aliases.nextElement())
+            }
+
+            println("ini listnya :" + keyAliases.toString())
+        } catch (e: Exception) {
+            println(e);
+        }
+        return keyAliases;
     }
 }

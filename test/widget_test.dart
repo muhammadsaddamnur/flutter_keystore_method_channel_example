@@ -5,26 +5,66 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:keystore_method_channel_explore/main.dart';
+void main(List<String> args) {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  MethodChannel? platform;
 
-void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  setUpAll(() {
+    platform = const MethodChannel('flutter/MethodChannelDemo');
+  });
+  test('test', () async {
+    String plainText = 'saddam';
+    String? enc = await platform!.invokeMethod('encript', {"text": plainText});
+    String? dec = await platform!.invokeMethod('decript', {"text": enc});
+    expect(plainText, dec);
   });
 }
+
+// void main() {
+//   MethodChannel platform = const MethodChannel('flutter/MethodChannelDemo');
+
+//   test('Test method channel function', () async {
+//     String plainText = 'saddam';
+//     await platform.invokeMockMethod('encript', {"text": plainText});
+//     String? enc = await platform.invokeMethod('encript', {"text": plainText});
+//     String? dec = await platform.invokeMethod('decript', {"text": enc});
+//     print(dec);
+//     expect(plainText, dec);
+//   });
+// }
+
+// extension MethodChannelMock on MethodChannel {
+//   Future<String?> invokeMockMethod(String method, dynamic arguments) async {
+//     const codec = StandardMethodCodec();
+//     final data = codec.encodeMethodCall(MethodCall(method, arguments));
+//     ByteData? result;
+//     ServicesBinding.instance?.defaultBinaryMessenger
+//         .handlePlatformMessage(name, data, (ByteData? data) {
+//       result = data;
+//     });
+
+//     return codec.decodeEnvelope(data) as String;
+//   }
+// }
+
+// Future<T?> invokeMockMethod<T>(String method,
+//     {required bool missingOk, dynamic arguments}) async {
+//   const codec = StandardMethodCodec();
+
+//   final ByteData? result =
+//       await ServicesBinding.instance?.defaultBinaryMessenger.send(
+//     method,
+//     codec.encodeMethodCall(MethodCall(method, arguments)),
+//   );
+//   if (result == null) {
+//     if (missingOk) {
+//       return null;
+//     }
+//     throw MissingPluginException(
+//         'No implementation found for method $method on channel $name');
+//   }
+//   return codec.decodeEnvelope(result) as T?;
+// }
